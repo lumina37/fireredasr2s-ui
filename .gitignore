@@ -24,10 +24,7 @@ static/tmp/*
 !static/tmp/.gitkeep
 runtime
 ffmpeg/*
-!ffmpeg/.gitkeep
 !ffmpeg/README.md
-output/*
-!output/.gitkeep
 venv
 dist
 source
