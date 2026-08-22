@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web UI for FireRedASR</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+	<style>
+	
+
+.main-content {
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    width: auto;
+
+}
+
+
+
+
+.drop-area {
+    border: 2px dashed #ced4da;
+    background-color: #f8f9fa;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s ease;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.drop-area p {
+    pointer-events: none;
+}
+
+.drop-area:hover,
+.drop-area.dragover {
+    border-color: #007bff;
+    background-color: #e9ecef;
+}
+
+.drop-area #preview-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+
+}
+.drop-area #preview-container video, .drop-area #preview-container audio {
+    max-width: 100%;
+    max-height: 100%;
+     pointer-events: auto;
+    object-fit: contain;
+}
+.drop-area #remove-file-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+}
+
+.subtitle-area {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 100%;
+	height:100%;
+}
+.subtitle-area h5 {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+.subtitle-area textarea {
+    border: none;
+    outline: none;
+    width: 100%;
+    display: block;
+    height: 100%;
+    resize: none;
+    overflow: auto;
+    padding-top: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #555;
+}
+.subtitle-area .download-button {
+    margin-top: 10px;
+}
+.fs-12{
+font-size:12px;
+color:#999;
+font-weight:400;
+}
+	</style>
+</head>
+
+<body>
+    <div class="container-fluid">
+	<h3 class="my-2 text-center">FireRedASR 语音识别 WebUI<span class='fs-12'>(v0.3)</span></h3>
+            <!-- 主体区域 -->
+            <main id="maincontent" role="main" class="flex-grow-1   main-content">
+                <!-- 语音识别区域 -->
+                <div id="recognition-area" class="mt-4">
+                    <div class="row h-75">
+                        <div class="col-md-6 mt-4 position-relative">
+							<div id='zz' class="position-absolute top-0 bottom-0 start-0 end-0 opacity-0 d-none" style="z-index:99;cursor:not-allowed"></div>
+							<div class="mb-1 d-flex align-items-center">
+								<span>识别模型</span>
+								<select id="model" class="form-select w-auto">
+									<option value="LLM" selected>LLM</option>
+									<option value="AED">AED</option>
+								</select>
+								<span>若需LLM模型，请上传文件前切换</span>
+							</div>
+                            <div id="drop-area" class="drop-area p-3 rounded text-center h-100">
+                                <p id="logs">点击或拖拽音频视频到此，转录为SRT字幕</p>
+                                <input type="file" id="file-upload" style="display:none;" accept="audio/*,video/*">
+                            </div>
+
+
+                        </div>
+
+                        <!-- 字幕显示区域 -->
+                        <div class="col-md-6">
+                            <div class="subtitle-area">
+								<div class="d-flex align-items-center">
+									<div class="m-0">转录结果在此显示</div>
+									<button  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="点击将转录结果下载到本地" role="tooltip"  type="button" class="btn btn-sm text-primary download-button my-0 mx-2 "   id="download-srt-button" disabled>下载字幕</button>
+								</div>
+                                <textarea id="srt-output" class="form-control mt-2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="mt-5 mb-2">
+                    <div class=" text-center  text-secondary    fs-12" >
+                      <a class="text-secondary" target="_blank" href="https://github.com/jianchang512/fireredasr-ui">GitHub: FireRedASR-UI</a>
+					  <span class="mx-1"></span>
+					  <a class="text-secondary" target="_blank" href="https://github.com/FireRedTeam/FireRedASR"> FireRedASR</a>
+                    </div>
+                </footer>
+            </main>
+        
+    </div>
+
+
+
+    <script src="/static/jquery.min.js"></script>
+    <script src="/static/bootstrap.bundle.min.js"></script>
+    <script src="/static/script.js?v=6"></script>
+</body>
+
+</html>

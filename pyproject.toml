@@ -1,0 +1,44 @@
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[project]
+name = "fireredasr2s-ui"
+version = "0.3.1"
+description = "WebUI and OpenAI-compatible API for FireRedASR2S (Xiaohongshu ASR system)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cn2an>=0.5.23",
+    "kaldiio>=2.18.0",
+    "kaldi_native_fbank>=1.15",
+    "numpy>=1.26.1",
+    "peft>=0.13.2",
+    "torch==2.13.0+cu130",
+    "torchaudio==2.11.0+cu130",
+    "transformers>=4.46.3,<5",
+    "faster-whisper",
+    "flask",
+    "waitress",
+    "flask_cors",
+    "pydub",
+    "sentencepiece",
+    "soundfile",
+    "textgrid",
+]
+
+[tool.uv]
+package = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+torchaudio = { index = "pytorch-cu130" }
+
+[tool.uv.build-backend]
+module-name = "fireredasr2s"
+module-root = ""

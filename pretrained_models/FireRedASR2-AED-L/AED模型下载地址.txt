@@ -1,0 +1,11 @@
+模型下载地址 (FireRedASR2-AED, 来自 FireRedASR2S)
+
+https://huggingface.co/FireRedTeam/FireRedASR2-AED/resolve/main/model.pth.tar?download=true
+
+将下载的  model.pth.tar  放到该目录 pretrained_models/FireRedASR2-AED-L 下
+（webui 使用目录为 pretrained_models/FireRedASR2-AED-L）
+
+另需该仓库中的 cmvn.ark、dict.txt、train_bpe1000.model 文件（如已存在可保留）:
+https://huggingface.co/FireRedTeam/FireRedASR2-AED
+
+国内加速镜像: 将 huggingface.co 替换为 hf-mirror.com
