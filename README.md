@@ -93,7 +93,7 @@ https://huggingface.co/Qwen/Qwen2-7B-Instruct/resolve/main/model-00004-of-00004.
 
 ### 启动整合包
 
-模型下载并正确放置后，双击 `启动.bat` 即可执行启动，启动后会自动在浏览器中 `http://127.0.0.1:5078`，如果正确显示了如下界面，就可以使用了。
+模型下载并正确放置后，双击 `run_webui.cmd` 即可执行启动，启动后会自动在浏览器中 `http://127.0.0.1:5078`，如果正确显示了如下界面，就可以使用了。
 
 ![](https://img.pyvideotrans.com/file/1740319997817_image.png)
 
