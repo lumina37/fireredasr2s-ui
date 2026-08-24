@@ -83,6 +83,15 @@ print(transcript.text)
 
 ## 命令行转写（CLI）
 
+**快速脚本（wav / m4a → SRT）**：
+
+```
+.\run.ps1 .\audio.wav
+.\run.ps1 .\audio.m4a -OutputPath .\subs\audio.srt
+```
+
+底层命令：
+
 ```
 .venv\Scripts\python.exe -m fireredasr2s.fireredasr2s_cli --wav_path input.wav --asr_type llm --asr_model_dir pretrained_models/FireRedASR2-LLM-L --asr_use_half 1 --enable_vad 0 --enable_lid 0 --enable_punc 0 --write_srt 1 --write_textgrid 0 --outdir output
 ```
