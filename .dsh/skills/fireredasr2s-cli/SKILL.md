@@ -117,6 +117,12 @@ Just use the defaults (VAD/LID/Punc on) and point `--asr_type`/`--asr_model_dir`
   ```bash
   ffmpeg\ffmpeg.exe -y -i in.mp4 -ac 1 -ar 16000 -c:a pcm_s16le -f wav out.wav
   ```
+- **Long audio**: the raw CLI (with `--enable_vad 0`) feeds the WHOLE file as one
+  segment, but the LLM only supports input up to 40s — longer files yield an empty
+  SRT. For wav/m4a files of any length use `.\run.ps1 <file>` instead: it converts
+  to 16k wav, VAD-splits into segments capped under the model limit
+  (`run_transcribe.py`, same faster-whisper VAD the webui uses) and merges one SRT
+  with global timestamps.
 - The LLM model needs ~18 GB VRAM; stop the web UI server (which caches the
   model) before running the CLI, or you may hit CUDA OOM.
 - Output text is lowercased (official FireRedASR2 behavior).
