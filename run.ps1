@@ -1,10 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
     Use FireRedASR2S to transcribe a single audio file (wav / m4a) into an SRT subtitle.
 
 .DESCRIPTION
     - Converts the input to 16kHz mono wav (required by FireRedASR2S)
-    - Runs fireredasr2s-cli (FireRedASR2-LLM, bf16 half precision)
+    - Transcribes with FireRedASR2-LLM (bf16); long audio is VAD-split into
+      segments under the model input limit and merged into one SRT
     - Writes <input>.srt next to the input by default; override with -OutputPath
 
 .PARAMETER InputFile
@@ -71,7 +72,6 @@ $OutputPath = (New-Object System.IO.FileInfo $OutputPath).FullName
 $work = Join-Path $env:TEMP ("fireredasr2s-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 $wav16k = Join-Path $work "input_16k.wav"
-$outdir = Join-Path $work "out"
 
 try {
     # ---------- convert to 16kHz mono wav ----------
@@ -81,33 +81,18 @@ try {
         throw "ffmpeg conversion failed: $InputFile"
     }
 
-    # ---------- run fireredasr2s-cli ----------
-    $useHalf = 0
-    if ($Model -eq "llm") { $useHalf = 1 }
-    Write-Host "==> Transcribing (model=$Model, use_half=$useHalf)..."
+    # ---------- transcribe (VAD-split long audio, merge SRT) ----------
+    Write-Host "==> Transcribing (model=$Model)..."
     $env:PYTHONUTF8 = "1"
     $env:PYTHONIOENCODING = "utf-8"
-    & "$RepoRoot\.venv\Scripts\python.exe" -m fireredasr2s.fireredasr2s_cli `
-        --wav_path $wav16k `
-        --asr_type $Model `
-        --asr_model_dir $modelDir `
-        --asr_use_half $useHalf `
-        --return_timestamp 0 `
-        --enable_vad 0 --enable_lid 0 --enable_punc 0 `
-        --write_srt 1 --write_textgrid 0 `
-        --outdir $outdir
+    & "$RepoRoot\.venv\Scripts\python.exe" "$RepoRoot\run_transcribe.py" `
+        --wav $wav16k `
+        --model $Model `
+        --model_dir $modelDir `
+        --output $OutputPath
     if ($LASTEXITCODE -ne 0) {
         throw "Transcription failed (exit=$LASTEXITCODE), see logs above"
     }
-
-    # ---------- pick up the SRT ----------
-    $srt = Join-Path $outdir "asr_srt\input_16k.srt"
-    if (-not (Test-Path $srt)) {
-        throw "SRT not generated: $srt"
-    }
-    Copy-Item $srt $OutputPath -Force
-    Write-Host ""
-    Write-Host "OK - subtitle written: $OutputPath"
 }
 finally {
     Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
