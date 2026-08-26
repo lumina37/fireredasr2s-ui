@@ -38,7 +38,7 @@ param(
     [string]$Model = "llm",
 
     [Parameter(Mandatory = $false)]
-    [double]$MaxDuration = 8.0
+    [double]$MaxDuration = 3.0
 )
 
 $ErrorActionPreference = "Stop"
