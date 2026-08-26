@@ -35,7 +35,10 @@ param(
 
     [Parameter(Mandatory = $false)]
     [ValidateSet("llm", "aed")]
-    [string]$Model = "llm"
+    [string]$Model = "llm",
+
+    [Parameter(Mandatory = $false)]
+    [double]$MaxDuration = 8.0
 )
 
 $ErrorActionPreference = "Stop"
@@ -89,6 +92,7 @@ try {
         --wav $wav16k `
         --model $Model `
         --model_dir $modelDir `
+        --max_duration $MaxDuration `
         --output $OutputPath
     if ($LASTEXITCODE -ne 0) {
         throw "Transcription failed (exit=$LASTEXITCODE), see logs above"

@@ -34,9 +34,14 @@ VAD_PARAMS = {
     "neg_threshold": 0.35,
     "min_speech_duration_ms": 0,
     "max_speech_duration_s": float("inf"),
-    "min_silence_duration_ms": 250,
-    "speech_pad_ms": 200,
+    # Finer splits -> shorter subtitle lines
+    "min_silence_duration_ms": 150,
+    "speech_pad_ms": 150,
 }
+# Subtitle length control: any segment longer than this is split at its
+# quietest point (default 8s; the model limit cap still applies on top).
+DEFAULT_MAX_SUBTITLE_MS = 8000
+MIN_PIECE_MS = 1500
 
 
 def ms_to_time_string(ms):
@@ -47,13 +52,65 @@ def ms_to_time_string(ms):
     return "%02d:%02d:%02d,%03d" % (h, m, s, ms_)
 
 
-def get_segments(wav_path, max_chunk_ms):
+def _rms_profile(seg, frame_ms=100):
+    """Per-frame RMS (dB-ish energy) of a pydub segment, ~frame_ms resolution."""
+    import numpy as np
+    raw = np.frombuffer(seg.raw_data, dtype=np.int16)  # 16k mono s16
+    n = max(1, int(seg.frame_rate * frame_ms / 1000))
+    cnt = len(raw) // n
+    if cnt == 0:
+        return np.zeros(1)
+    a = raw[:cnt * n].reshape(cnt, n).astype(np.float64)
+    return np.sqrt(np.mean(a * a, axis=1))
+
+
+def _quietest_point(audio, lo_ms, hi_ms, window_ms=500):
+    """Center of the quietest `window_ms` inside [lo_ms, hi_ms]."""
+    if hi_ms - lo_ms <= window_ms:
+        return (lo_ms + hi_ms) // 2
+    rms = _rms_profile(audio[lo_ms:hi_ms])
+    win = max(1, window_ms // 100)
+    if len(rms) <= win:
+        return (lo_ms + hi_ms) // 2
+    import numpy as np
+    idx = int(np.argmin(np.convolve(rms, np.ones(win), "valid")))
+    return lo_ms + (idx + win // 2) * 100
+
+
+def _cap(seg, audio, max_ms):
+    """Split one (s,e) segment into pieces <= max_ms, cutting at quiet points."""
+    s, e = seg
+    if e - s <= max_ms:
+        return [seg]
+    pieces = []
+    cur = s
+    while e - cur > max_ms:
+        lo = cur + MIN_PIECE_MS
+        hi = min(e - MIN_PIECE_MS, cur + max_ms)
+        split_at = _quietest_point(audio, lo, hi) if hi > lo else cur + max_ms
+        pieces.append((cur, split_at))
+        cur = split_at
+    pieces.append((cur, e))
+    return pieces
+
+
+def cap_segments(segments, audio, max_subtitle_ms, model_max_ms):
+    """Respect both the model input limit and the per-subtitle max duration;
+    long pieces are cut at the quietest point."""
+    capped = []
+    for s, e in segments:
+        if e - s > model_max_ms:
+            for p in _cap((s, e), audio, model_max_ms):
+                capped.extend(_cap(p, audio, max_subtitle_ms))
+        else:
+            capped.extend(_cap((s, e), audio, max_subtitle_ms))
+    return capped
+
+
+def get_segments(wav_path, max_chunk_ms, max_subtitle_ms):
     """Return list of (start_ms, end_ms) speech segments."""
     audio = AudioSegment.from_wav(wav_path)
     total_ms = len(audio)
-    # Short files: single segment
-    if total_ms < 30000:
-        return [(0, total_ms)]
     sampling_rate = 16000
     speech_chunks = get_speech_timestamps(
         decode_audio(wav_path, sampling_rate=sampling_rate),
@@ -65,16 +122,8 @@ def get_segments(wav_path, max_chunk_ms):
         for c in speech_chunks
     ]
     if not segs:
-        return [(0, total_ms)]
-    # Cap any segment longer than the model input limit
-    capped = []
-    for s, e in segs:
-        while e - s > max_chunk_ms:
-            capped.append((s, s + max_chunk_ms))
-            s += max_chunk_ms
-        if e - s > 0:
-            capped.append((s, e))
-    return capped
+        segs = [(0, total_ms)]
+    return cap_segments(segs, audio, max_subtitle_ms, max_chunk_ms)
 
 
 def main():
@@ -83,6 +132,8 @@ def main():
     ap.add_argument("--model", default="llm", choices=["llm", "aed"])
     ap.add_argument("--model_dir", required=True)
     ap.add_argument("--output", required=True, help="output SRT path")
+    ap.add_argument("--max_duration", type=float, default=8.0,
+                    help="max seconds per subtitle (default 8); longer segments are split at quiet points")
     ap.add_argument("--no_gpu", action="store_true")
     args = ap.parse_args()
 
@@ -109,8 +160,9 @@ def main():
     model = FireRedAsr2.from_pretrained(args.model, args.model_dir, cfg)
     print("==> model loaded in %.1fs" % (time.time() - t0), flush=True)
 
-    segments = get_segments(args.wav, MAX_CHUNK_MS[args.model])
-    print("==> %d segment(s) to transcribe" % len(segments), flush=True)
+    max_subtitle_ms = int(max(1.0, args.max_duration) * 1000)
+    segments = get_segments(args.wav, MAX_CHUNK_MS[args.model], max_subtitle_ms)
+    print("==> %d segment(s) to transcribe (max %gs each)" % (len(segments), max_subtitle_ms / 1000.0), flush=True)
 
     tmp = tempfile.mkdtemp(prefix="fr2s-")
     try:
