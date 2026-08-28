@@ -88,7 +88,7 @@ print(transcript.text)
 ```
 .\run.ps1 .\audio.wav
 .\run.ps1 .\audio.m4a -OutputPath .\subs\audio.srt
-.\run.ps1 .\audio.wav -MaxDuration 6   # 每条字幕最长秒数（默认 3s，超出会按静音点切分）
+.\run.ps1 .\audio.wav -MaxDuration 6   # 每条字幕最长秒数（默认 5s，超出会按静音点切分）
 ```
 
 底层命令：

@@ -39,8 +39,8 @@ VAD_PARAMS = {
     "speech_pad_ms": 100,
 }
 # Subtitle length control: any segment longer than this is split at its
-# quietest point (default 3s; the model limit cap still applies on top).
-DEFAULT_MAX_SUBTITLE_MS = 3000
+# quietest point (default 5s; the model limit cap still applies on top).
+DEFAULT_MAX_SUBTITLE_MS = 5000
 MIN_PIECE_MS = 1500
 
 
@@ -132,8 +132,8 @@ def main():
     ap.add_argument("--model", default="llm", choices=["llm", "aed"])
     ap.add_argument("--model_dir", required=True)
     ap.add_argument("--output", required=True, help="output SRT path")
-    ap.add_argument("--max_duration", type=float, default=3.0,
-                    help="max seconds per subtitle (default 3); longer segments are split at quiet points")
+    ap.add_argument("--max_duration", type=float, default=5.0,
+                    help="max seconds per subtitle (default 5); longer segments are split at quiet points")
     ap.add_argument("--no_gpu", action="store_true")
     args = ap.parse_args()
 

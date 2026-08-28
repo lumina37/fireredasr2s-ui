@@ -120,7 +120,7 @@ Just use the defaults (VAD/LID/Punc on) and point `--asr_type`/`--asr_model_dir`
 - **Long audio**: the raw CLI (with `--enable_vad 0`) feeds the WHOLE file as one
   segment, but the LLM only supports input up to 40s — longer files yield an empty
   SRT. For wav/m4a files of any length use `.\run.ps1 <file>` instead: it converts
-  to 16k wav, VAD-splits into short segments (max 3s each by default,
+  to 16k wav, VAD-splits into short segments (max 5s each by default,
   `-MaxDuration` to tune; same faster-whisper VAD the webui uses) and merges one
   SRT with global timestamps.
 - The LLM model needs ~18 GB VRAM; stop the web UI server (which caches the
